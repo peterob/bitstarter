@@ -8,7 +8,6 @@ var CHECKSFILE_DEFAULT = "checks.json";
 var sys = require('util');
 var rest = require('restler');
 var URL_DEFAULT = "http://still-inlet-1248.herokuapp.com/";
-var assertUrlExists = function (val){return val.toString();};
 
 var callThis = function (result) {
     if (data instanceof Error) {
@@ -19,19 +18,22 @@ var callThis = function (result) {
     }
 };
 
+
+var assertFileExists = function(infile) {
+    var instr = infile.toString();
+    if(!fs.existsSync(instr)) {
+        console.log("%s does not exist. Exiting.", instr);
+        process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
+    }
+      return instr;
+};
+
+var assertUrlExists = function (val){return val.toString();};
+
 var clone = function(fn) {
     // Workaround for commander.js issue.
     // http://stackoverflow.com/a/6772648
     return fn.bind({});
-};
-
-var assertFileExists = function(infile) {
-    var instr = infile.toString();
-    if(!fs.existsSync(intr)) {
-        console.log("%s does not exist. Exiting.", instr);
-        process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
-    }
-    return instr;
 };
 
 var cheerioHtmlFile = function(htmlfile) {
@@ -56,11 +58,10 @@ var checkHtmlFile = function(htmlfile, checksfile) {
 
 if (require.main == module) {
     program
-        .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('u, --url', 'http://still-inlet-1248.herokuapp.com/', clone(assertUrlExists), URL_DEFAULT)
-        .parse(process.argv);
-
+        .option('-c, --checks <check_file>', 'checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
+        .option('-f, --file <html_file>', 'index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('u, --url <url>','url to check', URL_DEFAULT)
+        .parse(process.argv);     
     if (program.url) {
         rest.get(program.url).on('complte', function(result) {
             fs.writeFileSync("myfile.html", result);
@@ -73,5 +74,5 @@ if (require.main == module) {
             var checkJson = checkHtmlFile(result, program.checks);
             var outJson = JSON.stringify(checkJson, null, 4);
             console.log(outJson);
-        }
-        }
+}
+}
